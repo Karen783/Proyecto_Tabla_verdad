@@ -1,105 +1,136 @@
 <script>
-	/* =========================
-	   ESTADO
-	========================= */
-	let expression = '';
-	let variables = [];
-	let table = [];
+/* =========================
+   ESTADO
+========================= */
+let classification = null;
+let expression = '';
+let variables = [];
+let table = [];
 
-	const operators = [
-		{ label: '¬', value: '¬' },
-		{ label: '∧', value: '∧' },
-		{ label: '∨', value: '∨' },
-		{ label: '→', value: '→' },
-		{ label: '↔', value: '↔' },
-		{ label: '(', value: '(' },
-		{ label: ')', value: ')' }
-	];
+const operators = [
+	{ label: '¬', value: '¬' },
+	{ label: '∧', value: '∧' },
+	{ label: '∨', value: '∨' },
+	{ label: '→', value: '→' },
+	{ label: '↔', value: '↔' },
+	{ label: '(', value: '(' },
+	{ label: ')', value: ')' }
+];
 
-	/* =========================
-	   UTILIDADES
-	========================= */
+/* =========================
+   UTILIDADES
+========================= */
 
-	function insertSymbol(symbol) {
-		expression += symbol;
+function insertSymbol(symbol) {
+	expression += symbol;
+}
+
+function clearExpression() {
+	expression = '';
+	variables = [];
+	table = [];
+	classification = null;
+}
+
+function extractVariables(expr) {
+	const matches = expr.match(/[a-z]/gi) || [];
+	return [...new Set(matches)]
+		.filter(v => v !== 't' && v !== 'c')
+		.sort();
+}
+
+function generateCombinations(vars) {
+	const rows = [];
+	const total = 2 ** vars.length;
+
+	for (let i = total - 1; i >= 0; i--) {
+		const row = {};
+		vars.forEach((v, index) => {
+			row[v] = Boolean((i >> (vars.length - index - 1)) & 1);
+		});
+		rows.push(row);
+	}
+	return rows;
+}
+
+/* =========================
+   NORMALIZACIÓN LÓGICA
+========================= */
+
+function normalizeExpression(expr, values) {
+	let e = expr;
+
+	// constantes
+	e = e.replaceAll('t', 'true').replaceAll('c', 'false');
+
+	// variables
+	for (const [v, val] of Object.entries(values)) {
+		e = e.replaceAll(v, val ? 'true' : 'false');
 	}
 
-	function clearExpression() {
-		expression = '';
-		variables = [];
-		table = [];
-	}
-
-	function extractVariables(expr) {
-		const matches = expr.match(/[a-z]/gi) || [];
-		return [...new Set(matches)].sort();
-	}
-
-	function generateCombinations(vars) {
-		const rows = [];
-		const total = 2 ** vars.length;
-
-		for (let i = 0; i < total; i++) {
-			const row = {};
-			vars.forEach((v, index) => {
-				row[v] = Boolean((i >> (vars.length - index - 1)) & 1);
-			});
-			rows.push(row);
-		}
-		return rows;
-	}
-
-	function normalizeExpression(expr, values) {
-		let e = expr;
-
-		// variables
-		for (const [v, val] of Object.entries(values)) {
-			e = e.replaceAll(v, val ? 'true' : 'false');
-		}
-
-		// operadores lógicos
-		e = e
-			.replaceAll('¬', '!')
-			.replaceAll('∧', '&&')
-			.replaceAll('∨', '||')
-			.replaceAll('→', '(!A || B)')
-			.replaceAll('↔', '(A === B)');
-
-		// implicación y bicondicional (manual)
-		e = e.replace(/(!?true|!?false|\([^()]+\))\s*→\s*(!?true|!?false|\([^()]+\))/g,
+	// implicación
+	while (e.includes('→')) {
+		e = e.replace(
+			/(\([^()]+\)|true|false)\s*→\s*(\([^()]+\)|true|false)/,
 			'(!$1 || $2)'
 		);
+	}
 
-		e = e.replace(/(!?true|!?false|\([^()]+\))\s*↔\s*(!?true|!?false|\([^()]+\))/g,
+	// bicondicional
+	while (e.includes('↔')) {
+		e = e.replace(
+			/(\([^()]+\)|true|false)\s*↔\s*(\([^()]+\)|true|false)/,
 			'($1 === $2)'
 		);
-
-		return e;
 	}
 
-	function evaluateExpression(expr) {
-		return Function(`"use strict"; return (${expr});`)();
-	}
+	// operadores básicos
+	e = e
+		.replaceAll('¬', '!')
+		.replaceAll('∧', '&&')
+		.replaceAll('∨', '||');
 
-	/* =========================
-	   ACCIÓN PRINCIPAL
-	========================= */
+	return e;
+}
 
-	function generateTable() {
-		try {
-			variables = extractVariables(expression);
-			const combinations = generateCombinations(variables);
+function evaluateExpression(expr) {
+	return Function(`"use strict"; return (${expr});`)();
+}
 
-			table = combinations.map(values => {
-				const normalized = normalizeExpression(expression, values);
-				const result = evaluateExpression(normalized);
-				return { ...values, result };
-			});
-		} catch (err) {
-			alert('Expresión inválida');
-			console.error(err);
+/* =========================
+   GENERAR TABLA
+========================= */
+
+function generateTable() {
+	try {
+		expression = expression.toLowerCase();
+
+		variables = extractVariables(expression);
+
+		if (variables.length > 10) {
+			alert('Máximo 10 variables permitidas');
+			return;
 		}
+
+		const combinations = generateCombinations(variables);
+
+		table = combinations.map(values => {
+			const normalized = normalizeExpression(expression, values);
+			const result = evaluateExpression(normalized);
+			return { ...values, result };
+		});
+
+		const results = table.map(r => r.result);
+
+		if (results.every(r => r === true)) classification = 'T';
+		else if (results.every(r => r === false)) classification = 'C';
+		else classification = 'CONT';
+
+	} catch (err) {
+		classification = null;
+		alert('Expresión inválida');
 	}
+}
 </script>
 
 <main class="min-h-screen bg-base-200 flex items-center justify-center p-4">
@@ -110,14 +141,13 @@
 				Generador de Tablas de Verdad
 			</h1>
 
-			<!-- INPUT -->
 			<input
 				class="input input-bordered text-lg font-mono"
 				bind:value={expression}
+				on:input={() => expression = expression.toLowerCase()}
 				placeholder="Ej: (p ∧ q) → r"
 			/>
 
-			<!-- TECLADO -->
 			<div>
 				<p class="font-semibold mb-2">Operadores</p>
 				<div class="grid grid-cols-4 gap-2">
@@ -132,7 +162,6 @@
 				</div>
 			</div>
 
-			<!-- BOTONES -->
 			<div class="flex justify-end gap-2">
 				<button class="btn btn-ghost" on:click={clearExpression}>
 					Limpiar
@@ -142,7 +171,6 @@
 				</button>
 			</div>
 
-			<!-- TABLA -->
 			{#if table.length}
 				<div class="divider">Tabla de verdad</div>
 
@@ -172,7 +200,22 @@
 				</div>
 			{/if}
 
+			{#if classification}
+				<div class="alert mt-4
+					{classification === 'T' ? 'alert-success' : ''}
+					{classification === 'C' ? 'alert-error' : ''}
+					{classification === 'CONT' ? 'alert-warning' : ''}">
+
+					{#if classification === 'T'}
+						<span class="font-bold">Tautología</span> — siempre verdadera
+					{:else if classification === 'C'}
+						<span class="font-bold">Contradicción</span> — siempre falsa
+					{:else}
+						<span class="font-bold">Contingencia</span> — depende de los valores
+					{/if}
+				</div>
+			{/if}
+
 		</div>
 	</div>
 </main>
-
