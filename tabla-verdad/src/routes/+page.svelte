@@ -153,7 +153,7 @@ function generateTable() {
 				<div class="grid grid-cols-4 gap-2">
 					{#each operators as op}
 						<button
-							class="btn btn-outline font-mono"
+							class="btn btn-block font-mono"
 							on:click={() => insertSymbol(op.value)}
 						>
 							{op.label}
