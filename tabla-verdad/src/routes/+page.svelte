@@ -104,7 +104,7 @@
 			<h1 class="card-title justify-center text-2xl">Generador de Tablas de Verdad</h1>
 
 			<input
-				class="input-bordered input font-mono text-lg"
+				class=" input-primary input font-mono text-lg"
 				bind:value={expression}
 				on:input={() => (expression = expression.toLowerCase())}
 				placeholder="Ej: (p ∧ q) → r"
@@ -121,10 +121,10 @@
 				</div>
 			</div>
 
-			<div class="flex justify-end gap-2">
-				<button class="btn btn-ghost" on:click={clearExpression}> Limpiar </button>
-				<button class="btn btn-primary" on:click={generateTable}> Generar tabla </button>
-			</div>
+            <div class="flex justify-between gap-2">
+               <button class="btn btn-secondary flex-1" on:click={clearExpression}> Limpiar </button>
+               <button class="btn btn-primary flex-1" on:click={generateTable}> Generar tabla </button>
+            </div>
 
 			{#if table.length}
 				<div class="divider">Tabla de verdad</div>
