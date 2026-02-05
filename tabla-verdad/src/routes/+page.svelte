@@ -114,7 +114,7 @@
 				<p class="mb-2 font-semibold">Operadores</p>
 				<div class="grid grid-cols-4 gap-2">
 					{#each operators as op}
-						<button class="btn btn-block font-mono" on:click={() => insertSymbol(op.value)}>
+						<button class="btn btn-soft font-mono" on:click={() => insertSymbol(op.value)}>
 							{op.label}
 						</button>
 					{/each}
