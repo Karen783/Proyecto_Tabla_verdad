@@ -104,7 +104,7 @@
 			<h1 class="card-title justify-center text-2xl">Generador de Tablas de Verdad</h1>
 
 			<input
-				class=" input-primary input font-mono text-lg"
+				class="input-primary input font-mono text-lg w-full"
 				bind:value={expression}
 				on:input={() => (expression = expression.toLowerCase())}
 				placeholder="Ej: (p ∧ q) → r"
