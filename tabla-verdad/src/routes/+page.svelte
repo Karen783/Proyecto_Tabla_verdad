@@ -25,7 +25,8 @@
 
 	function extractVariables(expr) {
 		const matches = expr.match(/[a-z]/gi) || [];
-		return [...new Set(matches)].filter((v) => v !== 't' && v !== 'c').sort();
+		let expresiones = [...new Set(matches)].filter((v) => v !== 't' && v !== 'c').sort();
+		return expresiones;
 	}
 
 	function generateCombinations(vars) {
@@ -42,7 +43,6 @@
 		return rows;
 	}
 
-
 	function normalizeExpression(expr, values) {
 		let e = expr;
 
@@ -51,7 +51,7 @@
 
 		// variables
 		for (const [v, val] of Object.entries(values)) {
-			e = e.replaceAll(v, val ? 'true' : 'false');
+			e = e.replace(new RegExp(`\\b${v}\\b`, 'g'), val ? 'true' : 'false');
 		}
 
 		// implicación
@@ -74,10 +74,6 @@
 		return Function(`"use strict"; return (${expr});`)();
 	}
 
-	/* =========================
-   GENERAR TABLA
-========================= */
-
 	function generateTable() {
 		try {
 			variables = extractVariables(expression);
@@ -96,7 +92,6 @@
 			});
 
 			const results = table.map((r) => r.result);
-
 		} catch (err) {
 			alert('Expresión inválida');
 		}
