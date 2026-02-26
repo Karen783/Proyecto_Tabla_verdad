@@ -140,10 +140,10 @@
 
             <div>
 				<p class="mb-2 font-semibold text-sm opacity-70">Operadores</p>
-				<div class="grid grid-cols-4 sm:grid-cols-7 gap-2">
+				<div class="grid grid-cols-4 gap-2">
 					{#each operators as op}
 						<button 
-							class="btn btn-sm border-none bg-base-200 hover:bg-base-300 text-base-content font-mono shadow-sm" 
+							class="btn btn-soft border-none bg-base-200 hover:bg-base-300 text-base-content font-mono shadow-sm" 
 							on:click={() => insertSymbol(op.value)}>
 							{op.label}
 						</button>
@@ -152,7 +152,7 @@
 			</div>
 
             <div class="flex justify-between gap-2">
-                <button class="btn btn-ghost flex-1" on:click={clearExpression}> Limpiar </button>
+                <button class="btn btn-secondary flex-1" on:click={clearExpression}> Limpiar </button>
                 <button class="btn btn-primary flex-1" on:click={generateTable}> Generar tabla </button>
             </div>
 
