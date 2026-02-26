@@ -2,6 +2,7 @@
 	let expression = '';
 	let variables = [];
 	let table = [];
+	let subExpressions = [];
 
 	const operators = [
 		{ label: '¬', value: '¬' },
@@ -23,79 +24,95 @@
 		table = [];
 	}
 
-	function extractVariables(expr) {
-		const matches = expr.match(/[a-z]/gi) || [];
-		let expresiones = [...new Set(matches)].filter((v) => v !== 't' && v !== 'c').sort();
-		return expresiones;
-	}
+    function extractVariables(expr) {
+        const matches = expr.match(/[a-z]/gi) || [];
+        return [...new Set(matches)]
+            .filter((v) => v !== 't' && v !== 'c')
+            .sort();
+    }
 
 	function generateCombinations(vars) {
-		const rows = [];
-		const total = 2 ** vars.length;
-
-		for (let i = total - 1; i >= 0; i--) {
-			const row = {};
-			vars.forEach((v, index) => {
-				row[v] = Boolean((i >> (vars.length - index - 1)) & 1);
-			});
-			rows.push(row);
-		}
-		return rows;
-	}
+        const rows = [];
+        const total = Math.pow(2, vars.length);
+        for (let i = 0; i < total; i++) {
+            const row = {};
+            vars.forEach((v, index) => {
+                row[v] = Boolean((i >> (vars.length - index - 1)) & 1);
+            });
+            rows.push(row);
+        }
+        return rows; 
+    }
 
 	function normalizeExpression(expr, values) {
-		let e = expr;
+        let e = ` ${expr} `; 
 
-		// constantes
-		e = e.replaceAll('t', 'true').replaceAll('c', 'false');
+        // 1. Reemplazar constantes
+        e = e.replace(/\bt\b/g, ' true ').replace(/\bc\b/g, ' false ');
 
-		// variables
-		for (const [v, val] of Object.entries(values)) {
-			e = e.replace(new RegExp(`\\b${v}\\b`, 'g'), val ? 'true' : 'false');
-		}
+        // 2. Reemplazar variables 
+        for (const [v, val] of Object.entries(values)) {
+            const regex = new RegExp(`\\b${v}\\b`, 'g');
+            e = e.replace(regex, val ? ' true ' : ' false ');
+        }
 
-		// implicación
-		while (e.includes('→')) {
-			e = e.replace(/(\([^()]+\)|true|false)\s*→\s*(\([^()]+\)|true|false)/, '(!$1 || $2)');
-		}
+        // 3. Operadores básicos
+        e = e.replaceAll('¬', ' ! ')
+             .replaceAll('∧', ' && ')
+             .replaceAll('∨', ' || ');
 
-		// bicondicional
-		while (e.includes('↔')) {
-			e = e.replace(/(\([^()]+\)|true|false)\s*↔\s*(\([^()]+\)|true|false)/, '($1 === $2)');
-		}
+        // 4. Implicación y Bicondicional 
+        let prev;
+        do {
+            prev = e;
+            e = e.replace(/(\([^()]+\)|true|false)\s*→\s*(\([^()]+\)|true|false)/g, '(! $1 || $2)');
+            e = e.replace(/(\([^()]+\)|true|false)\s*↔\s*(\([^()]+\)|true|false)/g, '($1 === $2)');
+        } while (e !== prev);
 
-		// operadores básicos
-		e = e.replaceAll('¬', '!').replaceAll('∧', '&&').replaceAll('∨', '||');
-
-		return e;
-	}
+        return e;
+    }
 
 	function evaluateExpression(expr) {
-		return Function(`"use strict"; return (${expr});`)();
-	}
+        try {
+            return !!(new Function(`return ${expr}`)());
+        } catch (e) {
+            return false;
+        }
+    }
 
 	function generateTable() {
-		try {
-			variables = extractVariables(expression);
+        if (!expression) return;
+        try {
+            variables = extractVariables(expression);
+            
+            const parenRegex = /\(([^()]+)\)/g;
+            let match;
+            subExpressions = [];
+            while ((match = parenRegex.exec(expression)) !== null) {
+                if (match[1].length > 1) subExpressions.push(match[1]);
+            }
+            subExpressions = [...new Set(subExpressions)];
 
-			if (variables.length > 10) {
-				alert('Máximo 10 variables permitidas');
-				return;
-			}
+            const combinations = generateCombinations(variables);
 
-			const combinations = generateCombinations(variables);
+            table = combinations.map((values) => {
+                const row = { ...values };
+                
+                // Evaluar columnas intermedias
+                subExpressions.forEach(sub => {
+                    row[sub] = evaluateExpression(normalizeExpression(sub, values));
+                });
 
-			table = combinations.map((values) => {
-				const normalized = normalizeExpression(expression, values);
-				const result = evaluateExpression(normalized);
-				return { ...values, result };
-			});
-
-			const results = table.map((r) => r.result);
-		} catch (err) {
-			alert('Expresión inválida');
-		}
-	}
+                // Evaluar resultado final
+                const finalNorm = normalizeExpression(expression, values);
+                row.result = evaluateExpression(finalNorm);
+                
+                return row;
+            });
+        } catch (err) {
+            alert('Error en la expresión');
+        }
+    }
 </script>
 
 <main class="flex min-h-screen items-center justify-center bg-base-200 p-4">
@@ -134,9 +151,14 @@
 						<thead>
 							<tr>
 								{#each variables as v}
-									<th>{v}</th>
+									<th class="bg-base-300">{v}</th>
 								{/each}
-								<th>Resultado</th>
+
+								{#each subExpressions as sub}
+									<th class="text-secondary italic">{sub}</th>
+								{/each}
+
+								<th class="bg-primary text-primary-content">Resultado</th>
 							</tr>
 						</thead>
 						<tbody>
@@ -145,6 +167,11 @@
 									{#each variables as v}
 										<td>{row[v] ? 'V' : 'F'}</td>
 									{/each}
+
+									{#each subExpressions as sub}
+										<td class="text-secondary">{row[sub] ? 'V' : 'F'}</td>
+									{/each}
+
 									<td class="font-bold">
 										{row.result ? 'V' : 'F'}
 									</td>
