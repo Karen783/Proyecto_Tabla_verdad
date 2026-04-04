@@ -5,7 +5,7 @@
             <h1 class="card-title text-4xl font-extrabold text-slate-800 mb-4">
                 Lógica y esctructuras discretas
             </h1>
-            <p class="text-slate-600 text-lg leading-relaxed flex-grow-0">
+            <p class="text-slate-600 text-lg leading-relaxed grow-0">
                 En este curso vamos a desarrollar conocimientos y habilidades para abstraer, identificar, construir, y desarrollar modelos matemáticos discretos formales, analizando y evaluando herramientas matemáticas para presentar una solución a un problema.
                 Enseguida encontrarás información general sobre el curso y enlaces a información particular del curso y a lo que aprenderás durante el desarrollo del mismo.
             </p>
