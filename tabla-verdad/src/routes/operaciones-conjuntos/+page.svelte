@@ -145,22 +145,16 @@
 	}
 </script>
 
-<!-- ── UI ──────────────────────────────────────────────────────────── -->
-<main class="min-h-screen bg-base-200 p-6">
+<main class="min-h-screen bg-base-200 pt-12">
 	<div class="mx-auto flex max-w-3xl flex-col gap-6">
 		<!-- Header -->
-		<div class="flex items-center justify-between">
-			<div>
-				<a href="/" class="text-sm text-slate-500 hover:underline">← Volver</a>
-				<h1 class="mt-1 text-3xl font-extrabold text-slate-800">Calculadora de Conjuntos</h1>
-			</div>
-
-			<!-- Botón cargar archivo (dispara input oculto) -->
-			<label class="btn cursor-pointer border-none bg-slate-500 text-white hover:bg-slate-600">
-				＋ Agregar conjunto
-				<input type="file" accept=".txt" class="hidden" onchange={cargarArchivo} />
-			</label>
-		</div>
+		<div class="flex items-center justify-between w-full">
+            <h1 class="mt-1 text-3xl font-extrabold">Calculadora de Conjuntos</h1>
+            <label class="btn  btn-secondary">
+                ＋ Agregar conjunto
+                <input type="file" accept=".txt" class="hidden" onchange={cargarArchivo} />
+            </label>
+        </div>
 
 		{#if errorMsg}
 			<div class="alert text-sm alert-warning">{errorMsg}</div>
