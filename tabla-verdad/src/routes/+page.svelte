@@ -18,7 +18,7 @@
             </a>
             
             <a href="/operaciones-conjuntos" class="btn border-none bg-slate-500 hover:bg-slate-600 text-white shadow-md text-lg font-normal h-auto py-3">
-                Parcial 2
+                Operaciones con conjuntos
             </a>
             
             <button class="btn border-none bg-slate-500 hover:bg-slate-600 text-white shadow-md text-lg font-normal h-auto py-3">
